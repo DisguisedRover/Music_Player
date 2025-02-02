@@ -9,43 +9,85 @@ class SettingPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text("settings"),
-          backgroundColor: Theme.of(context).colorScheme.surface,
+      appBar: AppBar(
+        title: Text(
+          'Settings',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
         ),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        body: Column(
-          children: [
-            Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.secondary,
-                borderRadius: BorderRadius.circular(12),
+        centerTitle: true,
+      ),
+      body: ListView(
+        children: [
+          const SizedBox(height: 20),
+          _buildSettingsSection(
+            context,
+            title: 'Appearance',
+            children: [
+              _buildSettingsTile(
+                context,
+                title: 'Dark Mode',
+                subtitle: 'Switch between light and dark themes',
+                trailing: CupertinoSwitch(
+                  value: Provider.of<ThemeProvider>(context, listen: true)
+                      .isDarkMode,
+                  onChanged: (value) =>
+                      Provider.of<ThemeProvider>(context, listen: false)
+                          .toggleTheme(),
+                ),
               ),
-              margin: const EdgeInsets.only(left: 25, top: 10, right: 25),
-              padding: const EdgeInsets.all(25),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  //darkmode
-                  Text(
-                    "Dark Mode",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.inversePrimary,
-                    ),
-                  ),
-                  //switch
-                  CupertinoSwitch(
-                    value: Provider.of<ThemeProvider>(context, listen: false)
-                        .isDarkMode,
-                    onChanged: (value) =>
-                        Provider.of<ThemeProvider>(context, listen: false)
-                            .toggleTheme(),
-                  ),
-                ],
-              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsSection(
+    BuildContext context, {
+    required String title,
+    required List<Widget> children,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+        ),
+        Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          child: Column(children: children),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSettingsTile(
+    BuildContext context, {
+    required String title,
+    String? subtitle,
+    Widget? trailing,
+  }) {
+    return ListTile(
+      title: Text(
+        title,
+        style: Theme.of(context).textTheme.bodyLarge,
+      ),
+      subtitle: subtitle != null
+          ? Text(
+              subtitle,
+              style: Theme.of(context).textTheme.bodyMedium,
             )
-          ],
-        ));
+          : null,
+      trailing: trailing,
+    );
   }
 }
