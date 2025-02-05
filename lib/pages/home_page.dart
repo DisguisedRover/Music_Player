@@ -2,17 +2,45 @@ import 'package:flutter/material.dart';
 import 'music_list_screen.dart';
 import '/components/my_button.dart';
 import '/components/my_drawer.dart';
+import '/services/file_service.dart'; // Import the FileService
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
-  void _redirectIfNoMusic(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const MusicListScreen(),
-      ),
-    );
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  bool _isLoading = false;
+
+  Future<void> _handleMusicBrowse(BuildContext context) async {
+    setState(() => _isLoading = true);
+
+    try {
+      final musicFiles = await FileService.scanEntireStorage();
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MusicListScreen(initialFiles: musicFiles),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text('Error accessing music files. Please check permissions.'),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   @override
@@ -48,13 +76,16 @@ class HomePage extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
-            Semantics(
-              label: 'Button to browse music',
-              child: MyButton(
-                text: 'Browse Music',
-                onTap: () => _redirectIfNoMusic(context),
+            if (_isLoading)
+              const CircularProgressIndicator()
+            else
+              Semantics(
+                label: 'Button to browse music',
+                child: MyButton(
+                  text: 'Browse Music',
+                  onTap: () => _handleMusicBrowse(context),
+                ),
               ),
-            ),
           ],
         ),
       ),

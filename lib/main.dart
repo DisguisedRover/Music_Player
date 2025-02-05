@@ -16,52 +16,75 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // Function to request storage permissions
-  Future<void> _requestStoragePermissions(BuildContext context) async {
-    var status = await Permission.storage.status;
-    if (!status.isGranted) {
-      status = await Permission.storage.request();
-      if (status.isDenied) {
-        // Show a dialog explaining why the permission is needed
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Permission Required'),
-            content:
-                const Text('Storage permission is required to access files.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('OK'),
-              ),
-              TextButton(
-                onPressed: () => openAppSettings(), // Open app settings
-                child: const Text('Open Settings'),
-              ),
-            ],
-          ),
-        );
-      }
-    }
-
-    // Optional: Request manage external storage permission if needed
-    if (await Permission.manageExternalStorage.isDenied) {
-      await Permission.manageExternalStorage.request();
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Request permissions when the app starts
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await _requestStoragePermissions(context);
-    });
-
     return MaterialApp(
-      home: const HomePage(),
+      home: const PermissionHandler(child: HomePage()),
       debugShowCheckedModeBanner: false,
       title: 'Musical',
       theme: Provider.of<ThemeProvider>(context).themeData,
     );
   }
+}
+
+class PermissionHandler extends StatefulWidget {
+  final Widget child;
+  const PermissionHandler({super.key, required this.child});
+
+  @override
+  State<PermissionHandler> createState() => _PermissionHandlerState();
+}
+
+class _PermissionHandlerState extends State<PermissionHandler> {
+  Future<void> _requestPermissions() async {
+    // For Android 13+ (API level 33+)
+    if (await Permission.photos.status.isDenied) {
+      await Permission.photos.request();
+    }
+    if (await Permission.audio.status.isDenied) {
+      await Permission.audio.request();
+    }
+    if (await Permission.videos.status.isDenied) {
+      await Permission.videos.request();
+    }
+
+    // For Android 10+ (API level 29+)
+    if (await Permission.manageExternalStorage.status.isDenied) {
+      await Permission.manageExternalStorage.request();
+    }
+
+    // Handle permission denied
+    if (mounted &&
+        (await Permission.audio.isDenied ||
+            await Permission.videos.isDenied ||
+            await Permission.photos.isDenied)) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Permission Required'),
+          content:
+              const Text('Media permissions are required to access files.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+            TextButton(
+              onPressed: () => openAppSettings(),
+              child: const Text('Open Settings'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _requestPermissions();
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }
