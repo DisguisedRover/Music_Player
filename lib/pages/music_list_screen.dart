@@ -140,7 +140,7 @@ class _MusicListScreenState extends State<MusicListScreen> {
             backgroundColor: Theme.of(context).colorScheme.primaryContainer,
             child: Icon(
               Icons.music_note,
-              color: Theme.of(context).colorScheme.primary,
+              color: Theme.of(context).colorScheme.secondary,
             ),
           ),
           title: Text(
